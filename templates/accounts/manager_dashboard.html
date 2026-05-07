@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manager Dashboard - CHUPA ku CHUPA{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    .stat-card {
+        background: var(--card-bg);
+        border: 1px solid var(--glass-bg);
+        border-radius: 15px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+    .stat-value {
+        font-size: 2.5rem;
+        color: var(--primary-gold);
+        font-weight: bold;
+        margin: 1rem 0;
+    }
+    .chart-container {
+        background: var(--card-bg);
+        border: 1px solid var(--glass-bg);
+        border-radius: 15px;
+        padding: 2rem;
+        margin-top: 2rem;
+    }
+    .chart-container h3 {
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    canvas {
+        max-height: 400px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Manager Dashboard</h1>
+        <div class="badge bg-gold text-dark p-2 px-3">Manager Access</div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="dashboard-grid">
+        <div class="stat-card">
+            <h3>Total Items Sold</h3>
+            <div class="stat-value">{{ total_orders }}</div>
+            <p class="text-white-50">Across all categories</p>
+        </div>
+        <div class="stat-card">
+            <h3>Total Bookings</h3>
+            <div class="stat-value">{{ total_bookings }}</div>
+            <p class="text-white-50">Lounge room reservations</p>
+        </div>
+    </div>
+
+    <!-- Analytics Charts -->
+    <div class="row mt-4">
+        <div class="col-lg-6">
+            <div class="chart-container">
+                <h3>Sales by Category</h3>
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="chart-container">
+                <h3>Room Utilization</h3>
+                <canvas id="roomChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Theme colors
+    const goldColor = '#D4AF37';
+    const textColor = '#F5F5F5';
+    const gridColor = 'rgba(255, 255, 255, 0.1)';
+
+    // Category Chart (Bar)
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ category_labels|safe }},
+            datasets: [{
+                label: 'Items Sold',
+                data: {{ category_data|safe }},
+                backgroundColor: goldColor,
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: gridColor },
+                    ticks: { color: textColor }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: textColor }
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+
+    // Room Chart (Bar)
+    const roomCtx = document.getElementById('roomChart').getContext('2d');
+    new Chart(roomCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ room_labels|safe }},
+            datasets: [{
+                label: 'Bookings',
+                data: {{ room_data|safe }},
+                backgroundColor: goldColor,
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: gridColor },
+                    ticks: { color: textColor }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: textColor }
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+</script>
+{% endblock %}

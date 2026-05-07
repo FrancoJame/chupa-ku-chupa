@@ -1,0 +1,14 @@
+{% extends "admin/base.html" %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">CHUPA ku CHUPA Admin</a></h1>
+{% endblock %}
+
+{% block nav-global %}
+    <a href="{% url 'admin_status' %}" style="color: #fff; margin-left: 20px; font-weight: bold; text-decoration: none;">Status Dashboard</a>
+{% endblock %}
+
+{% block userlinks %}
+    <a href="{% url 'admin_status' %}">Status</a> /
+    {{ block.super }}
+{% endblock %}

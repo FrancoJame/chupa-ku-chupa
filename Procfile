@@ -1,1 +1,1 @@
-web: gunicorn chupa_project.wsgi
+web: python manage.py migrate && gunicorn chupa_project.wsgi

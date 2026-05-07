@@ -63,6 +63,11 @@
             box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
         }
 
+        .text-gold {
+            color: var(--primary-gold) !important;
+        }
+
+
         .glass-card {
             background: var(--card-bg);
             border: 1px solid var(--glass-bg);
@@ -332,9 +337,13 @@
                             <li class="nav-item"><a class="nav-link fw-bold text-warning" href="{% url 'orders:pos' %}">POS (Staff)</a></li>
                         {% endif %}
                         {% if user.role == 'STAFF' or user.role == 'MANAGER' %}
+                            {% if user.role == 'MANAGER' %}
+                                <li class="nav-item"><a class="nav-link fw-bold text-gold" href="{% url 'manager_dashboard' %}">Manager Dashboard</a></li>
+                            {% endif %}
                             <li class="nav-item"><a class="nav-link fw-bold text-warning" href="{% url 'bookings:staff_manage' %}">Manage Bookings</a></li>
                             <li class="nav-item"><a class="nav-link fw-bold text-warning" href="{% url 'orders:transaction_list' %}">Transactions</a></li>
                         {% endif %}
+
                         {% if user.role != 'MANAGER' %}
                             <li class="nav-item"><a class="nav-link" href="{% url 'bookings:user_bookings' %}">My Bookings</a></li>
                         {% endif %}

@@ -4,29 +4,73 @@
 
 {% block extra_css %}
 <style>
-    /* Better category filter on mobile */
+    /* Sliding category filter */
     .category-filters {
         display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        justify-content: center;
+        overflow-x: auto;
+        white-space: nowrap;
+        gap: 0.75rem;
+        padding: 1rem 0.5rem;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none;  /* IE and Edge */
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .category-filters::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
     }
 
     .category-filters .btn {
-        white-space: nowrap;
-        font-size: 0.9rem;
-        padding: 0.5rem 1rem;
+        flex: 0 0 auto;
+        font-size: 0.95rem;
+        padding: 0.6rem 1.25rem;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+        animation: slideInRight 0.6s ease-out forwards;
+        opacity: 0;
+        transform: translateX(50px);
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* Staggered animation for category buttons */
+    .category-filters .btn {
+        animation-delay: calc(var(--delay) * 0.1s);
     }
 
     @media (max-width: 576px) {
         .category-filters {
-            gap: 0.4rem;
+            gap: 0.5rem;
+            padding: 0.75rem 0.25rem;
         }
 
         .category-filters .btn {
             font-size: 0.85rem;
-            padding: 0.45rem 0.75rem;
+            padding: 0.5rem 1rem;
         }
+    }
+
+
+    /* Product card entrance animation */
+    .product-grid .col {
+        animation: slideInRight 0.8s ease-out forwards;
+        opacity: 0;
+        transform: translateX(100px);
+    }
+
+    /* Staggered animation for product grid */
+    .product-grid .col {
+        animation-delay: calc(var(--delay) * 0.15s);
     }
 
     /* Product card improvements */
@@ -35,7 +79,13 @@
         flex-direction: column;
         height: 100%;
         position: relative;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
+
+    .product-card:hover {
+        transform: scale(1.02) translateY(-10px);
+    }
+
 
     .product-image {
         width: 100%;
@@ -82,7 +132,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="mb-5 animate-fade">
+<div class="mb-5">
     <div class="text-center position-relative">
         <h1 class="display-3 mb-3">Our Menu</h1>
         <p class="lead opacity-75">Curated selection of premium drinks and snacks</p>
@@ -100,14 +150,16 @@
     <div class="category-filters">
         <a href="{% url 'products:product_list' %}" class="btn {% if not request.resolver_match.kwargs.category_id %}btn-gold{% else %}btn-outline-light{% endif %}">All</a>
         {% for category in categories %}
-            <a href="{% url 'products:product_list_by_category' category.id %}" class="btn {% if request.resolver_match.kwargs.category_id == category.id %}btn-gold{% else %}btn-outline-light{% endif %}">{{ category.name }}</a>
+            <a href="{% url 'products:product_list_by_category' category.id %}" class="btn {% if request.resolver_match.kwargs.category_id == category.id %}btn-gold{% else %}btn-outline-light{% endif %}" style="--delay: {{ forloop.counter }}">
+                {{ category.name }}
+            </a>
         {% endfor %}
     </div>
 </div>
 
-<div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4 animate-fade">
+<div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4 product-grid">
     {% for product in products %}
-        <div class="col">
+        <div class="col" style="--delay: {{ forloop.counter }}">
             <div class="glass-card product-card h-100 p-0 overflow-hidden">
                 <div style="position: relative;">
                     {% if product.image %}
