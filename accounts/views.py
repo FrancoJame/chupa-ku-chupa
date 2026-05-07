@@ -10,45 +10,16 @@ from .models import CustomUser
 from bookings.models import Booking
 
 class CustomLoginView(LoginView):
-    """Custom login view that properly handles and displays form errors"""
+    """Custom login view that uses standard Django LoginView mechanics"""
     template_name = 'accounts/login.html'
-    
-    def get_context_data(self, **kwargs):
-        """Ensure form is always in context"""
-        context = super().get_context_data(**kwargs)
-        if 'form' not in context:
-            from django.contrib.auth.forms import AuthenticationForm
-            context['form'] = AuthenticationForm()
-        return context
-    
-    def post(self, request, *args, **kwargs):
-        """Handle POST request with proper error handling"""
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        
-        # Authenticate user
-        user = authenticate(request, username=username, password=password)
-        
-        if user is not None:
-            # Login successful
-            login(request, user)
-            next_url = request.POST.get('next') or request.GET.get('next')
-            if next_url:
-                return redirect(next_url)
-            return redirect(self.get_success_url())
-        else:
-            # Authentication failed - show error
-            from django.contrib.auth.forms import AuthenticationForm
-            form = AuthenticationForm()
-            form.add_error(None, 'Invalid username or password.')
-            context = self.get_context_data(form=form)
-            return self.render_to_response(context)
+    redirect_authenticated_user = True
     
     def get_success_url(self):
-        next_url = self.request.GET.get('next')
+        next_url = self.request.POST.get('next') or self.request.GET.get('next')
         if next_url:
             return next_url
         return '/'
+
 
 
 class SignUpView(CreateView):
