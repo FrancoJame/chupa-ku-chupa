@@ -95,6 +95,12 @@
         position: relative;
     }
 
+    .product-image--placeholder {
+        object-fit: contain;
+        background: #212529;
+        padding: 1rem;
+    }
+
     /* Price badge positioned on image */
     .product-price-badge {
         position: absolute;
@@ -162,13 +168,7 @@
         <div class="col" style="--delay: {{ forloop.counter }}">
             <div class="glass-card product-card h-100 p-0 overflow-hidden">
                 <div style="position: relative;">
-                    {% if product.get_image_url %}
-                        <img src="{{ product.get_image_url }}" class="product-image" alt="{{ product.name }}" loading="lazy">
-                    {% else %}
-                        <div class="product-image bg-secondary d-flex align-items-center justify-content-center">
-                            <span class="text-white-50">No Image</span>
-                        </div>
-                    {% endif %}
+                    <img src="{{ product.get_image_url }}" class="product-image{% if not product.has_uploaded_image %} product-image--placeholder{% endif %}" alt="{{ product.name }}" loading="lazy">
                     <div class="product-price-badge">Ugx {{ product.price }}</div>
                 </div>
                 <div class="product-body">

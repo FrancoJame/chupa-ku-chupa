@@ -1,5 +1,6 @@
 from django.db import models
 from django.urls import reverse
+from django.templatetags.static import static
 from django.core.files.storage import default_storage
 
 class Category(models.Model):
@@ -21,9 +22,29 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+    def get_default_image_url(self):
+        return static('products/images/default-product.svg')
+
     def get_image_url(self):
         if not self.image:
-            return None
-        if not default_storage.exists(self.image.name):
-            return None
-        return reverse('serve_media', kwargs={'path': self.image.name})
+            return self.get_default_image_url()
+        try:
+            if default_storage.exists(self.image.name):
+                return reverse('serve_media', kwargs={'path': self.image.name})
+        except Exception:
+            pass
+        try:
+            url = self.image.url
+            if url.startswith('http'):
+                return url
+        except Exception:
+            pass
+        return self.get_default_image_url()
+
+    def has_uploaded_image(self):
+        if not self.image:
+            return False
+        try:
+            return default_storage.exists(self.image.name)
+        except Exception:
+            return False

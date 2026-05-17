@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Product">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2b3035"/>
+      <stop offset="100%" style="stop-color:#1a1a1a"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#bg)"/>
+  <g fill="none" stroke="#D4AF37" stroke-width="3" opacity="0.85">
+    <rect x="155" y="70" width="90" height="150" rx="8"/>
+    <path d="M150 90 Q200 60 250 90"/>
+    <ellipse cx="200" cy="220" rx="70" ry="12"/>
+  </g>
+  <text x="200" y="260" text-anchor="middle" fill="#888" font-family="sans-serif" font-size="14">No photo uploaded</text>
+</svg>
