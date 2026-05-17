@@ -1,5 +1,7 @@
 from django.db import models
 from django.conf import settings
+from django.urls import reverse
+from django.core.files.storage import default_storage
 
 class LoungeRoom(models.Model):
     name = models.CharField(max_length=100)
@@ -11,6 +13,13 @@ class LoungeRoom(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_image_url(self):
+        if not self.image:
+            return None
+        if not default_storage.exists(self.image.name):
+            return None
+        return reverse('serve_media', kwargs={'path': self.image.name})
 
 class Booking(models.Model):
     STATUS_CHOICES = [

@@ -215,6 +215,7 @@ if USE_S3:
     AWS_DEFAULT_ACL = None
     AWS_S3_FILE_OVERWRITE = False
     AWS_QUERYSTRING_AUTH = True
+    AWS_QUERYSTRING_EXPIRE = 60 * 60 * 24 * 7
     AWS_S3_SIGNATURE_VERSION = 's3v4'
 
     _s3_storage_options = {
@@ -225,6 +226,7 @@ if USE_S3:
         'signature_version': 's3v4',
         'default_acl': None,
         'querystring_auth': True,
+        'querystring_expire': AWS_QUERYSTRING_EXPIRE,
         'file_overwrite': False,
     }
     if AWS_S3_ENDPOINT_URL:

@@ -64,8 +64,8 @@
     {% for room in rooms %}
         <div class="col">
             <div class="glass-card lounge-card h-100 p-0 overflow-hidden">
-                {% if room.image %}
-                    <img src="{{ room.image.url }}" class="lounge-image" alt="{{ room.name }}" loading="lazy">
+                {% if room.get_image_url %}
+                    <img src="{{ room.get_image_url }}" class="lounge-image" alt="{{ room.name }}" loading="lazy">
                 {% else %}
                     <div class="lounge-image bg-secondary d-flex align-items-center justify-content-center">
                         <span class="text-white-50">Lounge Image</span>
