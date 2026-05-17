@@ -162,8 +162,8 @@
         <div class="col" style="--delay: {{ forloop.counter }}">
             <div class="glass-card product-card h-100 p-0 overflow-hidden">
                 <div style="position: relative;">
-                    {% if product.image %}
-                        <img src="{{ product.image.url }}" class="product-image" alt="{{ product.name }}" loading="lazy">
+                    {% if product.get_image_url %}
+                        <img src="{{ product.get_image_url }}" class="product-image" alt="{{ product.name }}" loading="lazy">
                     {% else %}
                         <div class="product-image bg-secondary d-flex align-items-center justify-content-center">
                             <span class="text-white-50">No Image</span>

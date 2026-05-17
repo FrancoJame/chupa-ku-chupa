@@ -18,3 +18,11 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_image_url(self):
+        if not self.image:
+            return None
+        try:
+            return self.image.url
+        except Exception:
+            return None

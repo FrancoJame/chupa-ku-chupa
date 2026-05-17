@@ -91,9 +91,14 @@ AWS_SECRET_ACCESS_KEY = _env_first(
 AWS_STORAGE_BUCKET_NAME = _env_first(
     'AWS_STORAGE_BUCKET_NAME', 'BUCKET', 'AWS_S3_BUCKET_NAME'
 )
-AWS_S3_REGION_NAME = _env_first('AWS_S3_REGION_NAME', 'REGION', default='auto')
+_aws_region = _env_first('AWS_S3_REGION_NAME', 'REGION', default='us-east-1')
+AWS_S3_REGION_NAME = 'us-east-1' if _aws_region == 'auto' else _aws_region
 AWS_S3_ENDPOINT_URL = _env_first(
     'AWS_S3_ENDPOINT_URL', 'ENDPOINT', 'AWS_ENDPOINT_URL'
+)
+
+ON_RAILWAY = bool(
+    os.environ.get('RAILWAY_ENVIRONMENT_ID') or os.environ.get('RAILWAY_PUBLIC_DOMAIN')
 )
 
 USE_S3 = bool(
@@ -198,6 +203,9 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+if ON_RAILWAY and not USE_S3:
+    MEDIA_ROOT = Path('/tmp/chupa-media')
+    MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
 
 _STATICFILES_BACKEND = 'whitenoise.storage.CompressedStaticFilesStorage'
 
@@ -206,7 +214,7 @@ if USE_S3:
     AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
     AWS_DEFAULT_ACL = None
     AWS_S3_FILE_OVERWRITE = False
-    AWS_QUERYSTRING_AUTH = False
+    AWS_QUERYSTRING_AUTH = True
     AWS_S3_SIGNATURE_VERSION = 's3v4'
 
     _s3_storage_options = {
@@ -216,7 +224,7 @@ if USE_S3:
         'region_name': AWS_S3_REGION_NAME,
         'signature_version': 's3v4',
         'default_acl': None,
-        'querystring_auth': False,
+        'querystring_auth': True,
         'file_overwrite': False,
     }
     if AWS_S3_ENDPOINT_URL:
@@ -224,7 +232,7 @@ if USE_S3:
 
     STORAGES = {
         'default': {
-            'BACKEND': 'storages.backends.s3.S3Storage',
+            'BACKEND': 'chupa_project.storage.RailwayS3Storage',
             'OPTIONS': _s3_storage_options,
         },
         'staticfiles': {

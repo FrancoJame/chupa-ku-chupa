@@ -1,3 +1,5 @@
+import json
+
 from django.shortcuts import render
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Sum, Count
@@ -38,26 +40,32 @@ class ManagerDashboardView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
     template_name = 'accounts/manager_dashboard.html'
     
     def test_func(self):
-        return self.request.user.role == 'MANAGER'
-        
+        return getattr(self.request.user, 'role', None) == 'MANAGER'
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
-        # 1. Sales by Category
+
         sales_by_category = OrderItem.objects.values('product__category__name').annotate(
             total_sold=Sum('quantity')
         ).order_by('-total_sold')
-        
-        context['category_labels'] = [item['product__category__name'] for item in sales_by_category]
-        context['category_data'] = [item['total_sold'] for item in sales_by_category]
-        
-        # 2. Most Used Rooms
+
+        context['category_labels_json'] = json.dumps(
+            [item['product__category__name'] or 'Uncategorized' for item in sales_by_category]
+        )
+        context['category_data_json'] = json.dumps(
+            [item['total_sold'] for item in sales_by_category]
+        )
+
         room_utilization = Booking.objects.values('room__name').annotate(
             booking_count=Count('id')
         ).order_by('-booking_count')
-        
-        context['room_labels'] = [item['room__name'] for item in room_utilization]
-        context['room_data'] = [item['booking_count'] for item in room_utilization]
+
+        context['room_labels_json'] = json.dumps(
+            [item['room__name'] for item in room_utilization]
+        )
+        context['room_data_json'] = json.dumps(
+            [item['booking_count'] for item in room_utilization]
+        )
         
         # Summary Stats
         context['total_orders'] = OrderItem.objects.count()

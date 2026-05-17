@@ -13,12 +13,24 @@ class CustomLoginView(LoginView):
     """Custom login view that uses standard Django LoginView mechanics"""
     template_name = 'accounts/login.html'
     redirect_authenticated_user = True
-    
-    def get_success_url(self):
+
+    def _role_home_url(self):
         next_url = self.request.POST.get('next') or self.request.GET.get('next')
         if next_url:
             return next_url
+
+        role = getattr(self.request.user, 'role', None)
+        if role == 'STAFF':
+            return reverse_lazy('orders:pos')
+        if role == 'CUSTOMER':
+            return reverse_lazy('customer_dashboard')
         return '/'
+
+    def get_success_url(self):
+        return self._role_home_url()
+
+    def get_default_redirect_url(self):
+        return self._role_home_url()
 
 
 

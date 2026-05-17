@@ -1,6 +1,7 @@
 from django.views.generic import ListView, CreateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
+from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
 from .models import Product, Category
 
@@ -31,12 +32,26 @@ class ProductCreateView(LoginRequiredMixin, ManagerRequiredMixin, CreateView):
     success_url = reverse_lazy('products:product_list')
 
     def form_valid(self, form):
+        image_file = form.cleaned_data.get('image')
+        if image_file:
+            form.instance.image = None
+
         try:
-            return super().form_valid(form)
+            self.object = form.save()
         except Exception as exc:
-            messages.error(
-                self.request,
-                'Could not save the product image. Check that your storage bucket is '
-                f'connected to this service and allows uploads. ({exc})',
-            )
+            messages.error(self.request, f'Could not save the product: {exc}')
             return self.form_invalid(form)
+
+        if image_file:
+            try:
+                self.object.image = image_file
+                self.object.save(update_fields=['image'])
+            except Exception as exc:
+                messages.warning(
+                    self.request,
+                    'Product saved, but the image could not be uploaded. '
+                    'Connect your Railway bucket to this service (Credentials tab) '
+                    f'and redeploy. ({exc})',
+                )
+
+        return HttpResponseRedirect(self.get_success_url())

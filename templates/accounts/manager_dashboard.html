@@ -93,10 +93,10 @@
     new Chart(categoryCtx, {
         type: 'bar',
         data: {
-            labels: {{ category_labels|safe }},
+            labels: {{ category_labels_json|safe }},
             datasets: [{
                 label: 'Items Sold',
-                data: {{ category_data|safe }},
+                data: {{ category_data_json|safe }},
                 backgroundColor: goldColor,
                 borderRadius: 5
             }]
@@ -126,10 +126,10 @@
     new Chart(roomCtx, {
         type: 'bar',
         data: {
-            labels: {{ room_labels|safe }},
+            labels: {{ room_labels_json|safe }},
             datasets: [{
                 label: 'Bookings',
-                data: {{ room_data|safe }},
+                data: {{ room_data_json|safe }},
                 backgroundColor: goldColor,
                 borderRadius: 5
             }]
