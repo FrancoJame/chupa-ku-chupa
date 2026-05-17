@@ -27,15 +27,39 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-09_+t4xr3*)syv16g_nm-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = [
-    "chupa-ku-chupa-production.up.railway.app", 
-    "localhost", 
-    "127.0.0.1"
-]
+def _env_first(*keys, default=None):
+    for key in keys:
+        value = os.environ.get(key)
+        if value:
+            return value
+    return default
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://chupa-ku-chupa-production.up.railway.app",
+
+_allowed_hosts = [
+    h.strip()
+    for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+    if h.strip()
 ]
+for _host in (
+    'chupa-ku-chupa-production.up.railway.app',
+    'chupakuchupa.up.railway.app',
+    os.environ.get('RAILWAY_PUBLIC_DOMAIN', ''),
+):
+    if _host and _host not in _allowed_hosts:
+        _allowed_hosts.append(_host)
+ALLOWED_HOSTS = _allowed_hosts
+
+_csrf_origins = [
+    o.strip()
+    for o in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
+    if o.strip()
+]
+for _host in ALLOWED_HOSTS:
+    if _host not in ('localhost', '127.0.0.1'):
+        _origin = f'https://{_host}'
+        if _origin not in _csrf_origins:
+            _csrf_origins.append(_origin)
+CSRF_TRUSTED_ORIGINS = _csrf_origins
 
 
 # Application definition
@@ -59,8 +83,22 @@ INSTALLED_APPS = [
     'api',
 ]
 
-# User-uploaded files (product/lounge images). On Railway, set AWS_* env vars (see below).
-USE_S3 = bool(os.environ.get('AWS_STORAGE_BUCKET_NAME'))
+# User uploads: local media/ in dev; Railway Bucket or S3 in production.
+AWS_ACCESS_KEY_ID = _env_first('AWS_ACCESS_KEY_ID', 'ACCESS_KEY_ID', 'AWS_S3_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = _env_first(
+    'AWS_SECRET_ACCESS_KEY', 'SECRET_ACCESS_KEY', 'AWS_S3_SECRET_ACCESS_KEY'
+)
+AWS_STORAGE_BUCKET_NAME = _env_first(
+    'AWS_STORAGE_BUCKET_NAME', 'BUCKET', 'AWS_S3_BUCKET_NAME'
+)
+AWS_S3_REGION_NAME = _env_first('AWS_S3_REGION_NAME', 'REGION', default='auto')
+AWS_S3_ENDPOINT_URL = _env_first(
+    'AWS_S3_ENDPOINT_URL', 'ENDPOINT', 'AWS_ENDPOINT_URL'
+)
+
+USE_S3 = bool(
+    AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_STORAGE_BUCKET_NAME
+)
 if USE_S3:
     INSTALLED_APPS.append('storages')
 
@@ -161,23 +199,33 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-_STATICFILES_BACKEND = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+_STATICFILES_BACKEND = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 if USE_S3:
-    AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
-    AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
-    AWS_STORAGE_BUCKET_NAME = os.environ['AWS_STORAGE_BUCKET_NAME']
-    AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'us-east-1')
-    AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL') or None
     AWS_S3_CUSTOM_DOMAIN = os.environ.get('AWS_S3_CUSTOM_DOMAIN') or None
     AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
     AWS_DEFAULT_ACL = None
     AWS_S3_FILE_OVERWRITE = False
     AWS_QUERYSTRING_AUTH = False
+    AWS_S3_SIGNATURE_VERSION = 's3v4'
+
+    _s3_storage_options = {
+        'bucket_name': AWS_STORAGE_BUCKET_NAME,
+        'access_key': AWS_ACCESS_KEY_ID,
+        'secret_key': AWS_SECRET_ACCESS_KEY,
+        'region_name': AWS_S3_REGION_NAME,
+        'signature_version': 's3v4',
+        'default_acl': None,
+        'querystring_auth': False,
+        'file_overwrite': False,
+    }
+    if AWS_S3_ENDPOINT_URL:
+        _s3_storage_options['endpoint_url'] = AWS_S3_ENDPOINT_URL
 
     STORAGES = {
         'default': {
             'BACKEND': 'storages.backends.s3.S3Storage',
+            'OPTIONS': _s3_storage_options,
         },
         'staticfiles': {
             'BACKEND': _STATICFILES_BACKEND,

@@ -1,1 +1,1 @@
-web: python manage.py migrate && gunicorn chupa_project.wsgi
+web: python manage.py migrate && python manage.py collectstatic --noinput && gunicorn chupa_project.wsgi
