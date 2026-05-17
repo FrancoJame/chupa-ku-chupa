@@ -1,50 +1,13 @@
-from django.views.generic import ListView, CreateView, UpdateView, View
+from django.views.generic import ListView, CreateView, View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
-from django.http import HttpResponseRedirect
-from django.urls import reverse_lazy
-from accounts.mixins import ManagerRequiredMixin
 from .models import LoungeRoom, Booking
+from django.urls import reverse_lazy
 
 class LoungeListView(ListView):
     model = LoungeRoom
     template_name = 'bookings/lounge_list.html'
     context_object_name = 'rooms'
-
-
-class LoungeRoomManageView(LoginRequiredMixin, ManagerRequiredMixin, UpdateView):
-    """Managers only: upload room photo and set room status."""
-    model = LoungeRoom
-    template_name = 'bookings/lounge_room_form.html'
-    fields = ['image', 'status']
-    context_object_name = 'room'
-    success_url = reverse_lazy('bookings:lounge_list')
-
-    def form_valid(self, form):
-        image_file = form.cleaned_data.get('image')
-        if image_file:
-            form.instance.image = None
-
-        try:
-            self.object = form.save()
-        except Exception as exc:
-            messages.error(self.request, f'Could not update the room: {exc}')
-            return self.form_invalid(form)
-
-        if image_file:
-            try:
-                self.object.image = image_file
-                self.object.save(update_fields=['image'])
-            except Exception as exc:
-                messages.warning(
-                    self.request,
-                    f'Room status saved, but the photo could not be uploaded. ({exc})',
-                )
-
-        messages.success(self.request, f'"{self.object.name}" updated successfully.')
-        return HttpResponseRedirect(self.get_success_url())
-
 
 class CreateBookingView(CreateView):
     model = Booking
@@ -59,10 +22,7 @@ class CreateBookingView(CreateView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        room = get_object_or_404(LoungeRoom, id=self.kwargs['room_id'])
-        if not room.is_bookable():
-            messages.error(self.request, 'This room cannot be booked right now.')
-            return redirect('bookings:lounge_list')
+        room = LoungeRoom.objects.get(id=self.kwargs['room_id'])
         # Assign user only if logged in
         if self.request.user.is_authenticated:
             form.instance.user = self.request.user

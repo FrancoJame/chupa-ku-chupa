@@ -6,7 +6,6 @@ app_name = 'bookings'
 
 urlpatterns = [
     path('', views.LoungeListView.as_view(), name='lounge_list'),
-    path('rooms/<int:pk>/manage/', views.LoungeRoomManageView.as_view(), name='room_manage'),
     path('book/<int:room_id>/', views.CreateBookingView.as_view(), name='create_booking'),
     path('my-bookings/', views.UserBookingListView.as_view(), name='user_bookings'),
     path('staff-manage/', views.StaffBookingManageView.as_view(), name='staff_manage'),
