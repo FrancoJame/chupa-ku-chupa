@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage {{ room.name }} - CHUPA ku CHUPA{% endblock %}
+
+{% block content %}
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} mb-3">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+<div class="row justify-content-center animate-fade">
+    <div class="col-md-6">
+        <div class="glass-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">Manage Room</h2>
+                <span class="badge bg-gold text-dark p-2 px-3">Manager only</span>
+            </div>
+            <p class="text-white-50 mb-4">{{ room.name }} · {{ room.capacity }} guests</p>
+
+            {% if room.has_uploaded_image %}
+                <div class="mb-4 text-center">
+                    <p class="small text-white-50 mb-2">Current photo</p>
+                    <img src="{{ room.get_image_url }}" alt="{{ room.name }}" class="rounded" style="max-height:180px;width:100%;object-fit:cover;">
+                </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.name == 'status' %}
+                            <div class="form-text text-white-50">Controls whether guests can book this room.</div>
+                        {% elif field.name == 'image' %}
+                            <div class="form-text text-white-50">Only managers can upload or change room photos.</div>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-warning py-2 fw-bold">Save room</button>
+                    <a href="{% url 'bookings:lounge_list' %}" class="btn btn-outline-light">Back to lounges</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    form input[type="file"], form select {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        background-color: #212529;
+        color: white;
+        border: 1px solid #495057;
+        border-radius: 0.25rem;
+    }
+    form select:focus, form input:focus {
+        border-color: #fca311;
+        outline: none;
+    }
+</style>
+{% endblock %}

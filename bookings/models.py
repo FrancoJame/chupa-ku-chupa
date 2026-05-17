@@ -4,12 +4,25 @@ from django.urls import reverse
 from django.core.files.storage import default_storage
 
 class LoungeRoom(models.Model):
+    ROOM_STATUS_CHOICES = [
+        ('AVAILABLE', 'Available'),
+        ('BUSY', 'Busy'),
+        ('FREE_SOON', 'Free soon'),
+        ('UNAVAILABLE', 'Not available'),
+        ('MAINTENANCE', 'Under maintenance'),
+    ]
+
     name = models.CharField(max_length=100)
     capacity = models.PositiveIntegerField()
     description = models.TextField()
     price_per_hour = models.DecimalField(max_digits=10, decimal_places=2)
     price_full_day = models.DecimalField(max_digits=10, decimal_places=2, default=30000.00)
     image = models.ImageField(upload_to='lounges/', blank=True, null=True)
+    status = models.CharField(
+        max_length=20,
+        choices=ROOM_STATUS_CHOICES,
+        default='AVAILABLE',
+    )
 
     def __str__(self):
         return self.name
@@ -33,6 +46,26 @@ class LoungeRoom(models.Model):
         except Exception:
             pass
         return self.get_default_image_url()
+
+    def has_uploaded_image(self):
+        if not self.image:
+            return False
+        try:
+            return default_storage.exists(self.image.name)
+        except Exception:
+            return False
+
+    def get_status_display_class(self):
+        return {
+            'AVAILABLE': 'success',
+            'BUSY': 'danger',
+            'FREE_SOON': 'warning',
+            'UNAVAILABLE': 'secondary',
+            'MAINTENANCE': 'dark',
+        }.get(self.status, 'secondary')
+
+    def is_bookable(self):
+        return self.status in ('AVAILABLE', 'FREE_SOON')
 
 class Booking(models.Model):
     STATUS_CHOICES = [

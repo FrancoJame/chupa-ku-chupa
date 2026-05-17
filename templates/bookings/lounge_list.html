@@ -57,6 +57,9 @@
     <div class="text-center">
         <h1 class="display-3 mb-3">Lounge Experience</h1>
         <p class="lead opacity-75">Exclusive spaces for your private gatherings</p>
+        {% if user.is_authenticated and user.role == 'MANAGER' %}
+            <p class="text-white-50 small mt-2">Use <strong>Manage room</strong> on each card to upload photos and set status.</p>
+        {% endif %}
     </div>
 </div>
 
@@ -64,13 +67,12 @@
     {% for room in rooms %}
         <div class="col">
             <div class="glass-card lounge-card h-100 p-0 overflow-hidden">
-                {% if room.get_image_url %}
-                    <img src="{{ room.get_image_url }}" class="lounge-image" alt="{{ room.name }}" loading="lazy">
-                {% else %}
-                    <div class="lounge-image bg-secondary d-flex align-items-center justify-content-center">
-                        <span class="text-white-50">Lounge Image</span>
-                    </div>
-                {% endif %}
+                <div class="position-relative">
+                    <img src="{{ room.get_image_url }}" class="lounge-image{% if not room.has_uploaded_image %} opacity-75{% endif %}" alt="{{ room.name }}" loading="lazy">
+                    <span class="badge bg-{{ room.get_status_display_class }} position-absolute top-0 start-0 m-2">
+                        {{ room.get_status_display }}
+                    </span>
+                </div>
                 <div class="lounge-content">
                     <h3 class="h3 mb-2">{{ room.name }}</h3>
                     <p class="text-gold mb-2 small"><i class="bi bi-people"></i> Capacity: {{ room.capacity }} guests</p>
@@ -86,7 +88,16 @@
                                 <span class="fw-bold text-gold">Ugx {{ room.price_full_day }}</span>
                             </div>
                         </div>
-                        <a href="{% url 'bookings:create_booking' room.id %}" class="btn btn-gold w-100">Book Now</a>
+                        {% if room.is_bookable %}
+                            <a href="{% url 'bookings:create_booking' room.id %}" class="btn btn-gold w-100">Book Now</a>
+                        {% else %}
+                            <button class="btn btn-outline-secondary w-100" disabled>Not available to book</button>
+                        {% endif %}
+                        {% if user.is_authenticated and user.role == 'MANAGER' %}
+                            <a href="{% url 'bookings:room_manage' room.pk %}" class="btn btn-outline-warning w-100 mt-2">
+                                <i class="bi bi-gear me-1"></i>Manage room
+                            </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>

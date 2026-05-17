@@ -1,8 +1,9 @@
-from django.views.generic import ListView, CreateView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic import ListView, CreateView, UpdateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
+from accounts.mixins import ManagerRequiredMixin
 from .models import Product, Category
 
 class ProductListView(ListView):
@@ -20,10 +21,6 @@ class ProductListView(ListView):
         context = super().get_context_data(**kwargs)
         context['categories'] = Category.objects.all()
         return context
-
-class ManagerRequiredMixin(UserPassesTestMixin):
-    def test_func(self):
-        return getattr(self.request.user, 'role', None) == 'MANAGER'
 
 class ProductCreateView(LoginRequiredMixin, ManagerRequiredMixin, CreateView):
     model = Product
@@ -54,4 +51,42 @@ class ProductCreateView(LoginRequiredMixin, ManagerRequiredMixin, CreateView):
                     f'and redeploy. ({exc})',
                 )
 
+        return HttpResponseRedirect(self.get_success_url())
+
+
+class ProductUpdateView(LoginRequiredMixin, ManagerRequiredMixin, UpdateView):
+    """Managers only: update product details and upload or replace the photo."""
+    model = Product
+    template_name = 'products/product_form.html'
+    fields = ['name', 'category', 'description', 'price', 'stock_quantity', 'image', 'is_active']
+    context_object_name = 'product'
+    success_url = reverse_lazy('products:product_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form_title'] = f'Edit {self.object.name}'
+        return context
+
+    def form_valid(self, form):
+        image_file = form.cleaned_data.get('image')
+        if image_file:
+            form.instance.image = None
+
+        try:
+            self.object = form.save()
+        except Exception as exc:
+            messages.error(self.request, f'Could not save the product: {exc}')
+            return self.form_invalid(form)
+
+        if image_file:
+            try:
+                self.object.image = image_file
+                self.object.save(update_fields=['image'])
+            except Exception as exc:
+                messages.warning(
+                    self.request,
+                    f'Product saved, but the image could not be uploaded. ({exc})',
+                )
+
+        messages.success(self.request, f'"{self.object.name}" updated successfully.')
         return HttpResponseRedirect(self.get_success_url())
